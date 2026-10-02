@@ -1,51 +1,39 @@
----
-title: Real-Time Object Detection and Tracking
-emoji: 🎯
-colorFrom: blue
-colorTo: purple
-sdk: gradio
-sdk_version: "6.1.0"
-app_file: app.py
-pinned: false
----
-
 # 🎯 Real-Time Object Detection and Tracking
 
-A real-time multi-object detection and tracking application built using Python, YOLO11, ByteTrack, OpenCV, and Gradio.
+A real-time computer vision application that detects, identifies, and tracks multiple objects from a webcam using **YOLO11**, **OpenCV**, **NumPy**, and **Gradio**.
 
-## ✨ Features
+The application provides a browser-based interface where users can access their webcam, detect objects in real time, view bounding boxes, count detected objects, and monitor unique tracking IDs.
 
-- 📷 Real-time webcam input
-- 🔍 Multi-object detection
-- 📦 Bounding boxes
-- 🏷️ Object labels
-- 🆔 Tracking IDs
-- 🔄 ByteTrack object tracking
-- 📊 Detected object counting
-- 🌐 Browser-based interface
+---
 
-## 🧠 Technologies
+## 📌 Project Overview
 
-- Python
-- YOLO11
-- Ultralytics
-- ByteTrack
-- OpenCV
-- Gradio
+Real-Time Object Detection and Tracking is a computer vision project developed as part of the **CodeAlpha Internship**.
 
-## ⚙️ How It Works
+The system processes live webcam frames and performs object detection using the **YOLO11n** model. A lightweight custom tracking algorithm then associates detected objects across consecutive frames and assigns unique tracking IDs.
+
+### Processing Pipeline
 
 ```text
 Webcam
-   ↓
-Gradio
-   ↓
-OpenCV
-   ↓
+   │
+   ▼
+Gradio Webcam Interface
+   │
+   ▼
+OpenCV Frame Processing
+   │
+   ▼
 YOLO11 Object Detection
-   ↓
-ByteTrack
-   ↓
-Bounding Boxes + Labels + Tracking IDs
-   ↓
-Real-Time Output
+   │
+   ▼
+Object Coordinates & Classes
+   │
+   ▼
+Custom Object Tracking
+   │
+   ▼
+Tracking IDs & Object Counts
+   │
+   ▼
+Annotated Video Output
