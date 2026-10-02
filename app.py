@@ -11,6 +11,9 @@ from collections import Counter
 
 model = YOLO("yolo11n.pt")
 
+# Force CPU for Render
+model.to("cpu")
+
 
 # ==========================================
 # Object Detection + Tracking
@@ -19,51 +22,46 @@ model = YOLO("yolo11n.pt")
 def detect_and_track(frame):
 
     if frame is None:
-        return None, "No camera input"
+        return None, "Waiting for webcam..."
 
     try:
-        # Gradio gives RGB image
+        # Gradio gives RGB
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-        # YOLO detection + ByteTrack tracking
+        # YOLO + ByteTrack
         results = model.track(
             source=frame_bgr,
             persist=True,
             tracker="bytetrack.yaml",
-            conf=0.30,
-            imgsz=640,
+            conf=0.25,
+            imgsz=320,
+            device="cpu",
             verbose=False
         )
 
         result = results[0]
 
-        # Draw bounding boxes, labels and tracking IDs
+        # Draw detections
         annotated_frame = result.plot()
 
         detected_objects = []
-
-        # ==========================================
-        # Get detected objects
-        # ==========================================
 
         if result.boxes is not None:
 
             for box in result.boxes:
 
-                # Class ID
                 class_id = int(box.cls[0])
-
-                # Object name
                 object_name = model.names[class_id]
 
-                # Tracking ID
                 if box.id is not None:
                     track_id = int(box.id[0])
-                    label = f"{object_name} ID:{track_id}"
+                    detected_objects.append(
+                        f"{object_name} ID:{track_id}"
+                    )
                 else:
-                    label = object_name
-
-                detected_objects.append(label)
+                    detected_objects.append(
+                        object_name
+                    )
 
         # ==========================================
         # Count objects
@@ -72,31 +70,33 @@ def detect_and_track(frame):
         object_names = []
 
         for item in detected_objects:
-            object_names.append(item.split(" ID:")[0])
+            object_names.append(
+                item.split(" ID:")[0]
+            )
 
         counts = Counter(object_names)
 
         # ==========================================
-        # Information text
+        # Information
         # ==========================================
 
         if counts:
 
-            info = "Detected Objects:\n\n"
+            info = "### 🎯 Detected Objects\n\n"
 
             for name, count in counts.items():
-                info += f"{name}: {count}\n"
+                info += f"- **{name}**: {count}\n"
 
-            info += "\nTracking IDs:\n\n"
+            info += "\n### 🆔 Tracking IDs\n\n"
 
             for item in detected_objects:
-                info += f"{item}\n"
+                info += f"- `{item}`\n"
 
         else:
 
-            info = "No supported objects detected."
+            info = "🔍 No objects detected in this frame."
 
-        # Convert BGR back to RGB
+        # BGR → RGB
         annotated_frame = cv2.cvtColor(
             annotated_frame,
             cv2.COLOR_BGR2RGB
@@ -106,11 +106,12 @@ def detect_and_track(frame):
 
     except Exception as e:
 
-        return None, f"Error: {str(e)}"
+        # Return original frame instead of blank output
+        return frame, f"❌ Detection Error: {str(e)}"
 
 
 # ==========================================
-# Gradio Interface
+# Gradio UI
 # ==========================================
 
 with gr.Blocks(
@@ -144,29 +145,28 @@ with gr.Blocks(
             label="🎯 Detection & Tracking"
         )
 
-    object_info = gr.Textbox(
-        label="📊 Detection Information",
-        lines=10,
-        interactive=False
+    object_info = gr.Markdown(
+        "### 🔍 Waiting for camera..."
     )
 
-    # Real-time webcam processing
     webcam.stream(
         fn=detect_and_track,
         inputs=webcam,
         outputs=[output, object_info],
-        stream_every=0.20,
+        stream_every=0.5,
         concurrency_limit=1
     )
 
 
 # ==========================================
-# Launch
+# Start Server
 # ==========================================
 
 if __name__ == "__main__":
 
-    port = int(os.environ.get("PORT", 7860))
+    port = int(
+        os.environ.get("PORT", 7860)
+    )
 
     demo.queue()
 
